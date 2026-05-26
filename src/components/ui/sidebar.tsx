@@ -110,11 +110,23 @@ const SidebarProvider = React.forwardRef<
       <TooltipProvider delayDuration={0}>
         <div
           style={
-            {
-              "--sidebar-width": SIDEBAR_WIDTH,
-              "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
-              ...style,
-            } as React.CSSProperties
+            // Only allow CSS custom properties from the incoming style prop to avoid
+            // unintentionally applying arbitrary user-provided styles.
+            ((): React.CSSProperties => {
+              const baseRecord: Record<string, string | number | undefined> = {
+                "--sidebar-width": SIDEBAR_WIDTH,
+                "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
+              };
+              if (style && typeof style === "object") {
+                const styleRecord = style as Record<string, string | number | undefined>;
+                for (const key of Object.keys(styleRecord)) {
+                  if (key.startsWith("--")) {
+                    baseRecord[key] = styleRecord[key];
+                  }
+                }
+              }
+              return baseRecord as unknown as React.CSSProperties;
+            })()
           }
           className={cn("group/sidebar-wrapper flex min-h-svh w-full has-[[data-variant=inset]]:bg-sidebar", className)}
           ref={ref}
@@ -633,5 +645,4 @@ export {
   SidebarRail,
   SidebarSeparator,
   SidebarTrigger,
-  useSidebar,
 };
